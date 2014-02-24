@@ -1,0 +1,4 @@
+*.pyc
+.project
+.pydevproject
+ckanext_review.egg-info/

@@ -1,7 +1,8 @@
 {% ckan_extends %}
 
-{% block custom_fields %}
-
+{% block basic_fields %}
+	{{ super() }}
+	
 	{#{{ form.input('dataset_review_interval', label=_('Dataset Review Interval'), id='field-dataset_review_interval', placeholder=_('e.g. 3m'), value=data.dataset_review_interval, error=errors.dataset_review_interval, classes=['control-full']) }}#}
 
 	<div class="control-group">
@@ -16,5 +17,8 @@
 			</select>
 		</div>
 	</div>
+	
+{% endblock %}
 
+{% block custom_fields %}
 {% endblock %}

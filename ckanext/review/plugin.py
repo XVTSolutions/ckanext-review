@@ -11,7 +11,6 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IConfigurer, inherit=True)
     plugins.implements(plugins.IGroupForm, inherit=True)
-    plugins.implements(plugins.IMapper)
     
     """
     IRoutes
@@ -42,7 +41,7 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     def form_to_db_schema(self):
         schema = super(ReviewPlugin, self).form_to_db_schema()
         schema.update({
-                'dataset_review_interval': [tk.get_validator('ignore_missing'),
+                'dataset_review_interval': [tk.get_validator('ignore_missing'), tk.get_validator('is_positive_integer'),
                     tk.get_converter('convert_to_extras')]
                 })
         schema.update({
@@ -60,7 +59,7 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
             schema['package_count'] = [tk.get_validator('ignore_missing')]
             schema.update({
                 'dataset_review_interval': [tk.get_converter('convert_from_extras'),
-                    tk.get_validator('ignore_missing')]
+                    tk.get_validator('ignore_missing'), tk.get_validator('is_positive_integer')]
                 })
             schema.update({
                 'dataset_review_interval_type': [tk.get_converter('convert_from_extras'),
@@ -75,27 +74,3 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
         super(ReviewPlugin, self).setup_template_variables(context, data_dict)
         
         tk.c.dataset_review_interval_types = ('day(s)', 'week(s)', 'month(s)', 'year(s)')
-        
-        
-        
-    def before_insert(self, mapper, connection, instance):
-        #if type(instance) is ckan.model.package.Package and instance.type == "dataset":
-        #    instance.extras["review_timestamp"] = datetime.datetime.now()
-        pass
-              
-    def before_update(self, mapper, connection, instance):
-        if type(instance) is ckan.model.package.Package and instance.type == "dataset":
-            instance.extras["review_timestamp"] = datetime.datetime.now()
-        #pass
-
-    def before_delete(self, mapper, connection, instance):
-        pass
-
-    def after_insert(self, mapper, connection, instance):
-        pass
-
-    def after_update(self, mapper, connection, instance):
-        pass
-
-    def after_delete(self, mapper, connection, instance):
-        pass

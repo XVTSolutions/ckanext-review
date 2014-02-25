@@ -3,17 +3,21 @@ import ckan.lib.plugins as libplugins
 import ckan.plugins.toolkit as tk
 import ckan.logic.schema
 import datetime
-import ckanext.iarmetadata.plugin as plugins2
 import ckan.lib.helpers as h
+from model import create_table, get_package_review, add_package_review, update_package_review
 
 class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     """
     Setup plugin
     """
+    print "loading ckanext-review"
+
+    create_table()
+    
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IConfigurer, inherit=True)
     plugins.implements(plugins.IGroupForm, inherit=True)
-    plugins.implements(plugins2.IDatasetFormExtra)
+    plugins.implements(plugins.IPackageController, inherit=True)
     
     """
     IRoutes
@@ -80,59 +84,42 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
         
         
     """
-    IDatasetFormExtra
-    """
-    def IDatasetFormExtra_create_package_schema(self, schema):
-        schema.update({
-        'next_review_timestamp': [tk.get_validator('ignore_missing'),
-                             jsonisodate,
-            tk.get_converter('convert_to_extras')]
-        })
-                
-    def IDatasetFormExtra_update_package_schema(self, schema):
-        schema.update({
-        'next_review_timestamp': [tk.get_validator('ignore_missing'),
-                             jsonisodate,
-            tk.get_converter('convert_to_extras')]
-        })
-
-    def IDatasetFormExtra_show_package_schema(self, schema):
-        schema.update({
-        'next_review_timestamp': [tk.get_converter('convert_from_extras'),
-            tk.get_validator('ignore_missing'),
-            jsonisodate]
-        })
-       
-    def IDatasetFormExtra_setup_template_variables(self, context, data_dict):
+    IPackageController
+    """       
+    def after_show(self, context, pkg_dict):
         #set the default review date value
-        if ('owner_org' in data_dict):
-            owner_context = { 'user': context['user'],'for_view': True, 'include_datasets' : False }
-            
-            owner_dict = { 'id' : data_dict['owner_org']}
-            owner = tk.get_action('organization_show')(owner_context, owner_dict)
-            review_date = datetime.date.today()
-            
-            if 'dataset_review_interval' in owner and 'dataset_review_interval_type' in owner:
-                if owner['dataset_review_interval_type'] == "day(s)":
-                    review_date = review_date + datetime.timedelta(days=owner['dataset_review_interval'])
-                if owner['dataset_review_interval_type'] == "week(s)":
-                    review_date = review_date + datetime.timedelta(weeks=owner['dataset_review_interval'])
-                if owner['dataset_review_interval_type'] == "month(s)":
-                    review_date = review_date + datetime.timedelta(months=owner['dataset_review_interval'])
-                if owner['dataset_review_interval_type'] == "year(s)":
-                    review_date = review_date + datetime.timedelta(years=owner['dataset_review_interval'])
+        if ('owner_org' in pkg_dict):
+            package_review = get_package_review(context['session'], pkg_dict['id'])
+            #if package alrady has a review date set, return it...
+            if package_review:
+                pkg_dict['next_review_date'] = str(package_review.next_review_date)
+            #otherwise calculate the default date...
+            else:
+                owner_context = { 'user': context['user'],'for_view': True, 'include_datasets' : False }
                 
-                data_dict['next_review_timestamp'] = str(review_date)
-    
-    
-"""
-jsonisodate
-"""   
-def jsonisodate(value, context):
-    if isinstance(value, datetime.datetime):
-        return value.date().isoformat()
-    if isinstance(value, datetime.date):
-        return value.isoformat()
-    if value == '':
-        return None
-    return h.date_str_to_datetime(value).date().isoformat()
+                owner_dict = { 'id' : pkg_dict['owner_org']}
+                owner = tk.get_action('organization_show')(owner_context, owner_dict)
+                review_date = datetime.date.today()
+                
+                if 'dataset_review_interval' in owner and 'dataset_review_interval_type' in owner:
+                    if owner['dataset_review_interval_type'] == "day(s)":
+                        review_date = review_date + datetime.timedelta(days=owner['dataset_review_interval'])
+                    if owner['dataset_review_interval_type'] == "week(s)":
+                        review_date = review_date + datetime.timedelta(weeks=owner['dataset_review_interval'])
+                    if owner['dataset_review_interval_type'] == "month(s)":
+                        review_date = review_date + datetime.timedelta(months=owner['dataset_review_interval'])
+                    if owner['dataset_review_interval_type'] == "year(s)":
+                        review_date = review_date + datetime.timedelta(years=owner['dataset_review_interval'])
+                    
+                    pkg_dict['next_review_date'] = str(review_date)
+                    
+                    
+    def after_update(self, context, pkg_dict):
+        package_review = get_package_review(context['session'], pkg_dict['id'])
+        if 'next_review_date' in tk.request.params:
+            next_review_date = tk.request.params.getone('next_review_date')
+            if package_review:
+                package_review.next_review_date = next_review_date
+                update_package_review(context['session'], package_review)
+            else:
+                add_package_review(context['session'], pkg_dict['id'], next_review_date)

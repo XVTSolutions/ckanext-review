@@ -1,5 +1,6 @@
 import datetime
 import ckan.plugins.toolkit as tk
+from dateutil.relativedelta import relativedelta
 
 def calculate_next_review_date(context, owner_org):
     owner_context = { 'user': context['user'],'for_view': True, 'include_datasets' : False }
@@ -14,8 +15,8 @@ def calculate_next_review_date(context, owner_org):
         if owner['dataset_review_interval_type'] == "week(s)":
             review_date = review_date + datetime.timedelta(weeks=owner['dataset_review_interval'])
         if owner['dataset_review_interval_type'] == "month(s)":
-            review_date = review_date + datetime.timedelta(months=owner['dataset_review_interval'])
+            review_date = review_date + relativedelta(months=owner['dataset_review_interval'])
         if owner['dataset_review_interval_type'] == "year(s)":
-            review_date = review_date + datetime.timedelta(years=owner['dataset_review_interval'])
+            review_date = review_date + relativedelta(years=owner['dataset_review_interval'])
         
     return review_date

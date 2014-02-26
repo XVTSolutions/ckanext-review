@@ -1,0 +1,11 @@
+{% ckan_extends %}
+      
+{% block package_additional_info %}
+	{{ super() }}
+   
+	<tr>
+		<th scope="row" class="dataset-label">{{ _('Next Review') }}</th>
+		<td class="dataset-details"> {{ pkg_dict.next_review_date }}</td>
+	</tr>
+
+{% endblock %}

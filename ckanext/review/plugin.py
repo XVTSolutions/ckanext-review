@@ -5,6 +5,8 @@ import ckan.logic.schema
 import datetime
 import ckan.lib.helpers as h
 from model import create_table, get_package_review, add_package_review, update_package_review
+from helpers import calculate_next_review_date
+ValidationError = ckan.logic.ValidationError
 
 class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     """
@@ -24,7 +26,7 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     """
     def before_map(self, map):
 
-        map.connect('review', '/review/{id}',
+        map.connect('review', '/dataset/review/{id}',
             controller='ckanext.review.controller:ReviewController',
             action='index')
 
@@ -88,36 +90,32 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     """       
     def after_show(self, context, pkg_dict):
         #set the default review date value
-        if ('owner_org' in pkg_dict):
+        if 'owner_org' in pkg_dict:
             package_review = get_package_review(context['session'], pkg_dict['id'])
-            #if package alrady has a review date set, return it...
-            if package_review:
+            #if package already has a review date set, return it...
+            if package_review: #and package_review.next_review_date > datetime.date.today():
                 pkg_dict['next_review_date'] = str(package_review.next_review_date)
+                pkg_dict['needs_review'] = package_review.next_review_date <= datetime.date.today()
             #otherwise calculate the default date...
             else:
-                owner_context = { 'user': context['user'],'for_view': True, 'include_datasets' : False }
-                
-                owner_dict = { 'id' : pkg_dict['owner_org']}
-                owner = tk.get_action('organization_show')(owner_context, owner_dict)
-                review_date = datetime.date.today()
-                
-                if 'dataset_review_interval' in owner and 'dataset_review_interval_type' in owner:
-                    if owner['dataset_review_interval_type'] == "day(s)":
-                        review_date = review_date + datetime.timedelta(days=owner['dataset_review_interval'])
-                    if owner['dataset_review_interval_type'] == "week(s)":
-                        review_date = review_date + datetime.timedelta(weeks=owner['dataset_review_interval'])
-                    if owner['dataset_review_interval_type'] == "month(s)":
-                        review_date = review_date + datetime.timedelta(months=owner['dataset_review_interval'])
-                    if owner['dataset_review_interval_type'] == "year(s)":
-                        review_date = review_date + datetime.timedelta(years=owner['dataset_review_interval'])
+                review_date = calculate_next_review_date(context, pkg_dict['owner_org'])
                     
-                    pkg_dict['next_review_date'] = str(review_date)
-                    
+                pkg_dict['next_review_date'] = str(review_date) if 'for_view' not in context else ''
+                pkg_dict['needs_review'] = True
+
+#     def after_search(self, search_results, data_dict):
+#         for r in search_results['results']:
+#             r['next_review_date'] = str(datetime.date.today())
                     
     def after_update(self, context, pkg_dict):
         package_review = get_package_review(context['session'], pkg_dict['id'])
         if 'next_review_date' in tk.request.params:
-            next_review_date = tk.request.params.getone('next_review_date')
+            try:
+                next_review_date = datetime.datetime.strptime(tk.request.params.getone('next_review_date'), '%Y-%m-%d').date()
+            except ValueError:
+                context['session'].rollback()
+                raise ValidationError({'next_review_date' : ['Must be a valid date (yyyy-mm-dd)']})
+            
             if package_review:
                 package_review.next_review_date = next_review_date
                 update_package_review(context['session'], package_review)

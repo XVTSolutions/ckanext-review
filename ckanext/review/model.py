@@ -1,5 +1,5 @@
 from sqlalchemy import orm
-from sqlalchemy import Table, Column, types
+from sqlalchemy import Table, Column, types, ForeignKey
 from sqlalchemy import orm
 from sqlalchemy import schema, types
 from sqlalchemy.sql import select
@@ -8,7 +8,7 @@ from ckan.model.meta import metadata
 from ckan.model.types import make_uuid
 
 package_review_table = Table('package_review', metadata,
-        Column('package_id', types.UnicodeText, primary_key=True),
+        Column('package_id', types.UnicodeText, ForeignKey('package.id'), primary_key=True),
         Column('next_review_date', types.Date, default=u''),
     )
 

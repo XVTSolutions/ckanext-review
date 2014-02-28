@@ -9,7 +9,7 @@ from ckan.model.types import make_uuid
 
 package_review_table = Table('package_review', metadata,
         Column('package_id', types.UnicodeText, ForeignKey('package.id'), primary_key=True),
-        Column('next_review_date', types.Date, default=u''),
+        Column('next_review_date', types.Date),
     )
 
 class PackageReview(object):
@@ -19,6 +19,9 @@ orm.mapper(PackageReview, package_review_table)
 
 def create_table():
     package_review_table.create(checkfirst=True)
+    
+def get_by_date(session, date):
+    return session.query(PackageReview).filter(PackageReview.next_review_date == date)
     
 def get_package_review(session, package_id):
     return session.query(PackageReview).filter(PackageReview.package_id == package_id).first()

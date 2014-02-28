@@ -12,4 +12,9 @@ Installation
 1. clone this repository
 2. install: `python ckanext-review/setup.py develop`
 3. add `review` to the list of plugins in .ini file
+4. Ensure ckan is configured to send emails: http://docs.ckan.org/en/latest/maintaining/email-notifications.html
+4. Create a cron job that runs once a day to create activity stream items when packages are due to be reviewed i.e.
+	
+	1 0 * * *  /usr/lib/ckan/default/bin/paster --plugin=ckanext-review notify -c /etc/ckan/default/development.ini
+
 

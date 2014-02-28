@@ -1,0 +1,10 @@
+{% if h.check_access('package_update', {'id': pkg.id}) and pkg.needs_review %}
+<form action="/dataset/review/{{ pkg.name }}" method="POST" >
+	<section class="module module-narrow">
+		<h2 class="module-heading"><i class="icon-calendar"></i> {{ _("Review Dataset") }}</h2>
+		<ul class="unstyled nav nav-simple">
+			<li class="nav-btn"><button type="submit" class="btn btn-success"><i class="icon-ok-circle"></i> {{ _('Mark as Reviewed') }}</button></li>
+		</ul>
+	</section>
+</form>
+{% endif %}

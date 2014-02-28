@@ -26,5 +26,8 @@ setup(
 	"""
         [ckan.plugins]
 	review=ckanext.review.plugin:ReviewPlugin
+	
+		[paste.paster_command]
+	notify=ckanext.review.commands.notify:NotifyCommand
 	""",
 )

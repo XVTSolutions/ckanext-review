@@ -50,5 +50,5 @@ class NotifyCommand(CkanCommand):
                 'data' : { 'dataset': pkg_dict },
                 'activity_type': 'review package',
             }
-            plugins.toolkit.get_action('activity_create')(context, activity_dict)    
+            plugins.toolkit.get_action('activity_create')(context, activity_dict)
         

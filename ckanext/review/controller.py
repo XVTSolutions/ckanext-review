@@ -14,6 +14,7 @@ from ckan.lib.helpers import dataset_link, dataset_display_name
 from ckan.lib.helpers import flash_error, flash_success, flash_notice
 from ckan.logic.validators import package_name_exists
 from ckan.logic.converters import convert_package_name_or_id_to_id as convert_to_id
+from ckan.logic.validators import object_id_validators
 
 from helpers import calculate_next_review_date
 from model import create_table, get_package_review, add_package_review, update_package_review
@@ -59,7 +60,24 @@ class ReviewController(BaseController):
                 add_package_review(context['session'], pkg_dict['id'], next_review_date)
               
             #commit
-            context['session'].commit()  
+            context['session'].commit()
+
+            context = {'model': ckan.model,
+           'session': ckan.model.Session,
+           'ignore_auth': True}
+
+            admin_user = plugins.toolkit.get_action('get_site_user')(context,{})
+
+            object_id_validators['package reviewed'] = plugins.toolkit.get_validator('user_id_exists')#tk.get_validator('package_id_exists')
+
+            activity_dict = {
+                'user_id': admin_user['name'],
+                'object_id': pkg_dict["creator_user_id"],
+                'data' : { 'dataset': pkg_dict },
+                'activity_type': 'package reviewed',
+            }
+
+            plugins.toolkit.get_action('activity_create')(context, activity_dict)
         
         #return to view screen
         ckan.plugins.toolkit.redirect_to(controller="package", action="read", id=id)

@@ -119,7 +119,7 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
                 pkg_dict['next_review_date'] = str(package_review.next_review_date)
                 pkg_dict['needs_review'] = package_review.next_review_date <= datetime.date.today()
             #otherwise calculate the default date...
-            else:
+            elif pkg_dict['owner_org']:
                 review_date = calculate_next_review_date(context, pkg_dict['owner_org'])
                     
                 pkg_dict['next_review_date'] = str(review_date) if 'for_view' not in context else ''

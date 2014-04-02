@@ -3,8 +3,8 @@ import ckan.lib.plugins as libplugins
 import ckan.plugins.toolkit as tk
 import ckan.logic.schema
 import datetime
-import ckan.lib.helpers as h
-from model import create_table, get_package_review, add_package_review, update_package_review
+import helpers as h
+from model import create_table, get_package_review, add_package_review, update_package_review, GroupReview
 from helpers import calculate_next_review_date
 ValidationError = ckan.logic.ValidationError
 
@@ -40,8 +40,10 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IConfigurer, inherit=True)
-    plugins.implements(plugins.IGroupForm, inherit=True)
+    #plugins.implements(plugins.IGroupForm, inherit=True)
+    plugins.implements(plugins.IOrganizationController, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.ITemplateHelpers)
     
     """
     IRoutes
@@ -63,50 +65,89 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     """
     IGroupForm
     """
-    def is_fallback(self):
-        return False
-    
-    def group_types(self):
-        return ('organization',)
-    
-    def form_to_db_schema(self):
-        schema = super(ReviewPlugin, self).form_to_db_schema()
-        schema.update({
-                'dataset_review_interval': [tk.get_validator('ignore_missing'), tk.get_validator('is_positive_integer'),
-                    tk.get_converter('convert_to_extras')]
-                })
-        schema.update({
-                'dataset_review_interval_type': [tk.get_validator('ignore_missing'),
-                    tk.get_converter('convert_to_extras')]
-                })
-        return schema
-    
-    def db_to_form_schema(self):
-        schema = super(ReviewPlugin, self).db_to_form_schema()
-        if not schema:
-            schema = ckan.logic.schema.group_form_schema()
-            #schema = ckan.logic.schema.default_group_schema()
-            schema['num_followers'] = [tk.get_validator('ignore_missing')]
-            schema['package_count'] = [tk.get_validator('ignore_missing')]
-            schema.update({
-                'dataset_review_interval': [tk.get_converter('convert_from_extras'),
-                    tk.get_validator('ignore_missing'), tk.get_validator('is_positive_integer')]
-                })
-            schema.update({
-                'dataset_review_interval_type': [tk.get_converter('convert_from_extras'),
-                    tk.get_validator('ignore_missing')]
-                })
-        return schema
-    
-    def check_data_dict(self, data_dict):
-        dataset_review_interval = data_dict.get('dataset_review_interval', None)
-    
-    def setup_template_variables(self, context, data_dict):
-        super(ReviewPlugin, self).setup_template_variables(context, data_dict)
+#     def is_fallback(self):
+#         return False
+#     
+#     def group_types(self):
+#         return ('organization',)
+#     
+#     def form_to_db_schema(self):
+#         schema = super(ReviewPlugin, self).form_to_db_schema()
+#         schema.update({
+#                 'dataset_review_interval': [tk.get_validator('ignore_missing'), tk.get_validator('is_positive_integer'),
+#                     tk.get_converter('convert_to_extras')]
+#                 })
+#         schema.update({
+#                 'dataset_review_interval_type': [tk.get_validator('ignore_missing'),
+#                     tk.get_converter('convert_to_extras')]
+#                 })
+#         return schema
+#     
+#     def db_to_form_schema(self):
+#         schema = super(ReviewPlugin, self).db_to_form_schema()
+#         if not schema:
+#             schema = ckan.logic.schema.group_form_schema()
+#             #schema = ckan.logic.schema.default_group_schema()
+#             schema['num_followers'] = [tk.get_validator('ignore_missing')]
+#             schema['package_count'] = [tk.get_validator('ignore_missing')]
+#             schema.update({
+#                 'dataset_review_interval': [tk.get_converter('convert_from_extras'),
+#                     tk.get_validator('ignore_missing'), tk.get_validator('is_positive_integer')]
+#                 })
+#             schema.update({
+#                 'dataset_review_interval_type': [tk.get_converter('convert_from_extras'),
+#                     tk.get_validator('ignore_missing')]
+#                 })
+#         return schema
+#     
+#     def check_data_dict(self, data_dict):
+#         dataset_review_interval = data_dict.get('dataset_review_interval', None)
+#     
+#     def setup_template_variables(self, context, data_dict):
+#         super(ReviewPlugin, self).setup_template_variables(context, data_dict)
+#         
+#         tk.c.dataset_review_interval_types = ('day(s)', 'week(s)', 'month(s)', 'year(s)')
         
-        tk.c.dataset_review_interval_types = ('day(s)', 'week(s)', 'month(s)', 'year(s)')
+    """
+    IOrganizationController
+    """
+    def read(self, entity):
+        if isinstance(entity, ckan.model.Group):
+            gr = ckan.model.Session.query(GroupReview).filter(GroupReview.group_id == entity.id).first()
+            if gr:
+                tk.c.dataset_review_interval = gr.dataset_review_interval
+                tk.c.dataset_review_interval_type = gr.dataset_review_interval_type
+        return entity
+    
+    def create(self, entity):
         
-        
+        if isinstance(entity, ckan.model.Group):
+            gr = ckan.model.Session.query(GroupReview).filter(GroupReview.group_id == entity.id).first()
+            
+            if gr is None:
+                gr = GroupReview()
+                gr.group_id = entity.id
+                gr.dataset_review_interval = tk.request.params.getone('dataset_review_interval')
+                gr.dataset_review_interval_type = tk.request.params.getone('dataset_review_interval_type')
+                
+                gr.save()
+                
+    def edit(self, entity):
+        if isinstance(entity, ckan.model.Group):
+            
+            gr = ckan.model.Session.query(GroupReview).filter(GroupReview.group_id == entity.id).first()
+            if gr is None:
+                gr = GroupReview()
+                gr.group_id = entity.id
+                gr.dataset_review_interval = tk.request.params.getone('dataset_review_interval')
+                gr.dataset_review_interval_type = tk.request.params.getone('dataset_review_interval_type')
+                
+                gr.save()  
+            else:
+                gr.dataset_review_interval = tk.request.params.getone('dataset_review_interval')
+                gr.dataset_review_interval_type = tk.request.params.getone('dataset_review_interval_type')
+                gr.commit()
+                      
     """
     IPackageController
     """       
@@ -143,3 +184,11 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
                 update_package_review(context['session'], package_review)
             else:
                 add_package_review(context['session'], pkg_dict['id'], next_review_date)
+                
+    """
+    ITemplateHelpers
+    """
+    def get_helpers(self):
+        return {
+            'get_dataset_review_interval_types'             : h.get_dataset_review_interval_types,
+                }

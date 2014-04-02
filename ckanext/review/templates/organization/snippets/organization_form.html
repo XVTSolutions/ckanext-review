@@ -9,10 +9,10 @@
     	<label class="control-label" for="field-related_dataset_info">{{ _("Dataset Review Interval") }}</label>
 
 		<div class="controls">
-			<input type="number" id="field-dataset_review_interval" name="dataset_review_interval" value="{{ data.dataset_review_interval }}" style="width: 25px" />
+			<input type="number" id="field-dataset_review_interval" name="dataset_review_interval" value="{{ c.dataset_review_interval }}" style="width: 25px" />
 			<select id="field-dataset_review_interval_type" name="dataset_review_interval_type">
-				{% for type in c.dataset_review_interval_types  %}
-				<option value="{{ type }}" {% if type in data.get('dataset_review_interval_type', []) %}selected="selected"{% endif %}>{{ type }}</option>
+				{% for type in h.get_dataset_review_interval_types()  %}
+				<option value="{{ type }}" {% if type == c.dataset_review_interval_type %}selected="selected"{% endif %}>{{ type }}</option>
 				{% endfor %}
 			</select>
 		</div>

@@ -51,4 +51,6 @@ class NotifyCommand(CkanCommand):
                 'activity_type': 'review package',
             }
             plugins.toolkit.get_action('activity_create')(context, activity_dict)
+            
+        print 'done'
         

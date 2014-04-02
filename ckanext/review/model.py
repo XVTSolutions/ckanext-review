@@ -1,11 +1,13 @@
-from sqlalchemy import orm
-from sqlalchemy import Table, Column, types, ForeignKey
-from sqlalchemy import orm
-from sqlalchemy import schema, types
-from sqlalchemy.sql import select
-import uuid
+from sqlalchemy import orm, Table, Column, ForeignKey, types
+import ckan
 from ckan.model.meta import metadata
 from ckan.model.types import make_uuid
+
+group_review_table = Table('group_review', metadata,
+        Column('group_id', types.UnicodeText, ForeignKey('group.id'), primary_key=True),
+        Column('dataset_review_interval', types.Integer),
+        Column('dataset_review_interval_type', types.UnicodeText)
+    )
 
 package_review_table = Table('package_review', metadata,
         Column('package_id', types.UnicodeText, ForeignKey('package.id'), primary_key=True),
@@ -15,10 +17,16 @@ package_review_table = Table('package_review', metadata,
 class PackageReview(object):
     pass
 
+class GroupReview(ckan.model.domain_object.DomainObject):
+    pass
+
+orm.mapper(GroupReview, group_review_table)
+
 orm.mapper(PackageReview, package_review_table)
 
 def create_table():
     package_review_table.create(checkfirst=True)
+    group_review_table.create(checkfirst=True)
     
 def get_by_date(session, date):
     return session.query(PackageReview).filter(PackageReview.next_review_date == date)

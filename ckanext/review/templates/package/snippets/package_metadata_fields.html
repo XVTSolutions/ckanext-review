@@ -1,8 +1,12 @@
 {% ckan_extends %}
 
 {% block package_metadata_fields_custom %}
-  
-  {{ form.input('next_review_date', type='date', label=_('Next Review'), id='field-next_review_date', placeholder=_(''), value=data.next_review_date, error=errors.next_review_date, classes=['control-medium']) }}
+
+  {% resource 'fanstatic/jquery-ui.css' %}
+  {% resource 'fanstatic/jquery-ui.js' %}
+  {% resource 'fanstatic/datepicker-module.js' %}
+
+  {{ form.input('next_review_date', type='text', label=_('Next Review'), id='field-next_review_date', placeholder=_(''), value=data.next_review_date, error=errors.next_review_date, classes=['control-medium']) }}
 
   {{ super() }}
 

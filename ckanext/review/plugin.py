@@ -61,6 +61,7 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     """
     def update_config(self, config):
         plugins.toolkit.add_template_directory(config, 'templates')
+        plugins.toolkit._add_resource('fanstatic', 'fanstatic')
     
     """
     IGroupForm
@@ -157,13 +158,17 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
             package_review = get_package_review(context['session'], pkg_dict['id'])
             #if package already has a review date set, return it...
             if package_review: #and package_review.next_review_date > datetime.date.today():
-                pkg_dict['next_review_date'] = str(package_review.next_review_date)
+                db_date = package_review.next_review_date
+                #format date to an AU format
+                pkg_dict['next_review_date'] = datetime.datetime.strftime(db_date, '%d-%m-%Y')
                 pkg_dict['needs_review'] = package_review.next_review_date <= datetime.date.today()
             #otherwise calculate the default date...
             elif pkg_dict['owner_org']:
                 review_date = calculate_next_review_date(context, pkg_dict['owner_org'])
-                    
-                pkg_dict['next_review_date'] = str(review_date) if 'for_view' not in context else ''
+
+                #format date to an AU format
+                au_date = datetime.datetime.strftime(review_date, '%d-%m-%Y')
+                pkg_dict['next_review_date'] = str(au_date) if 'for_view' not in context else ''
                 pkg_dict['needs_review'] = True
 
 #     def after_search(self, search_results, data_dict):
@@ -174,10 +179,10 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
         package_review = get_package_review(context['session'], pkg_dict['id'])
         if 'next_review_date' in tk.request.params:
             try:
-                next_review_date = datetime.datetime.strptime(tk.request.params.getone('next_review_date'), '%Y-%m-%d').date()
+                next_review_date = datetime.datetime.strptime(tk.request.params.getone('next_review_date'), '%d-%m-%Y').date()
             except ValueError:
                 context['session'].rollback()
-                raise ValidationError({'next_review_date' : ['Must be a valid date (yyyy-mm-dd)']})
+                raise ValidationError({'next_review_date' : ['Must be a valid date (dd-mm-yyyy)']})
             
             if package_review:
                 package_review.next_review_date = next_review_date

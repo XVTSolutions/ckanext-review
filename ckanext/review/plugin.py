@@ -131,7 +131,12 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
                 gr.dataset_review_interval = tk.request.params.getone('dataset_review_interval')
                 gr.dataset_review_interval_type = tk.request.params.getone('dataset_review_interval_type')
                 
-                gr.save()
+                is_valid, errors = gr.validate()
+                
+                if is_valid:
+                    gr.save()
+                else:
+                    raise ValidationError(errors)
                 
     def edit(self, entity):
         if isinstance(entity, ckan.model.Group):
@@ -143,11 +148,22 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
                 gr.dataset_review_interval = tk.request.params.getone('dataset_review_interval')
                 gr.dataset_review_interval_type = tk.request.params.getone('dataset_review_interval_type')
                 
-                gr.save()  
+                is_valid, errors = gr.validate()
+                
+                if is_valid:
+                    gr.save()  
+                else:
+                    raise ValidationError(errors)
             else:
                 gr.dataset_review_interval = tk.request.params.getone('dataset_review_interval')
                 gr.dataset_review_interval_type = tk.request.params.getone('dataset_review_interval_type')
-                gr.commit()
+                
+                is_valid, errors = gr.validate()
+                
+                if is_valid:
+                    gr.commit()
+                else:
+                    raise ValidationError(errors)
                       
     """
     IPackageController

@@ -2,6 +2,7 @@ from sqlalchemy import orm, Table, Column, ForeignKey, types
 import ckan
 from ckan.model.meta import metadata
 from ckan.model.types import make_uuid
+import ckan.plugins.toolkit as tk
 
 group_review_table = Table('group_review', metadata,
         Column('group_id', types.UnicodeText, ForeignKey('group.id'), primary_key=True),
@@ -18,7 +19,27 @@ class PackageReview(object):
     pass
 
 class GroupReview(ckan.model.domain_object.DomainObject):
-    pass
+    def validate(self):
+        data = self.as_dict()
+        errors = { 'dataset_review_interval' : [] }
+        context = {}
+        is_valid = True
+        
+#         validator = tk.get_validator('not_empty')
+#         try:
+#             validator('dataset_review_interval', data, errors, context)
+#         except ckan.lib.navl.dictization_functions.StopOnError:
+#             is_valid = False
+           
+        validator = tk.get_validator('is_positive_integer') 
+        try:
+            #validator('dataset_review_interval', data, errors, context)
+            validator(data.get('dataset_review_interval', 0), context)
+        except ckan.lib.navl.dictization_functions.Invalid as ie:
+            is_valid = False
+            errors['dataset_review_interval'].append(ie.error)
+        
+        return is_valid, errors
 
 orm.mapper(GroupReview, group_review_table)
 

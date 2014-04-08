@@ -35,7 +35,7 @@ class ReviewController(BaseController):
             
             #check access
             try:
-                plugins.toolkit.check_access('package_update', context, data_dict)
+                plugins.toolkit.check_access('package_review', context, data_dict)
             except plugins.toolkit.NotAuthorized:
                 plugins.toolkit.abort(401, plugins.toolkit._('Unauthorized to review this package'))
             

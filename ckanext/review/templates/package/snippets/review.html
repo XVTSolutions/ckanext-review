@@ -1,4 +1,4 @@
-{% if h.check_access('package_update', {'id': pkg.id}) and pkg.needs_review %}
+{% if h.check_access('package_review', {'id': pkg.id}) and pkg.needs_review %}
 <form action="/dataset/review/{{ pkg.name }}" method="POST" >
 	<section class="module module-narrow">
 		<h2 class="module-heading"><i class="icon-calendar"></i> {{ _("Review Dataset") }}</h2>

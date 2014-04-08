@@ -2,6 +2,9 @@ import ckan.plugins as plugins
 import ckan.lib.plugins as libplugins
 import ckan.plugins.toolkit as tk
 import ckan.logic.schema
+import ckan.logic.auth as logic_auth
+import ckan.logic.converters as converters
+from ckan.logic import auth_sysadmins_check
 import datetime
 import helpers as h
 from model import create_table, get_package_review, add_package_review, update_package_review, GroupReview
@@ -44,6 +47,7 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     plugins.implements(plugins.IOrganizationController, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IAuthFunctions)
     
     """
     IRoutes
@@ -213,3 +217,23 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
         return {
             'get_dataset_review_interval_types'             : h.get_dataset_review_interval_types,
                 }
+        
+        
+    """   
+    IAuthFunctions
+    """ 
+    def get_auth_functions(self):
+        return {'package_review': _package_review}
+    
+    
+@auth_sysadmins_check
+def _package_review(context, data_dict=None):
+    can_update = tk.check_access('package_update', context, data_dict)
+    if can_update:
+        package = logic_auth.get_package_object(context, data_dict)
+
+        creator_user_id = converters.convert_user_name_or_id_to_id(tk.c.user, context)
+        if package and (package.maintainer == tk.c.user or package.creator_user_id == creator_user_id):
+            return {'success': True }
+            
+    return {'success': False, 'msg': 'Not allowed to update suspended packages'}

@@ -5,6 +5,7 @@ import ckan
 import pylons
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
+import ckan.logic.converters as converters
 import datetime
 from ckan.logic.validators import object_id_validators
 
@@ -43,10 +44,15 @@ class NotifyCommand(CkanCommand):
             pkg = ckan.model.Package.get(pr.package_id)
             pkg_dict = ckan.lib.dictization.table_dictize(pkg, context)
             
+            user_id = pkg_dict["creator_user_id"]
+            
+            if pkg.maintainer and len(pkg.maintainer) > 0:
+                user_id = converters.convert_user_name_or_id_to_id(pkg.maintainer, context)
+            
             #add item into the creators activity stream indicating the package needs to be reviewed
             activity_dict = {
                 'user_id': admin_user['name'],
-                'object_id': pkg_dict["creator_user_id"],#pr.package_id,
+                'object_id': user_id,
                 'data' : { 'dataset': pkg_dict },
                 'activity_type': 'review package',
             }

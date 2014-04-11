@@ -8,7 +8,7 @@ from ckan.logic import auth_sysadmins_check
 import datetime
 import helpers as h
 from model import create_table, get_package_review, add_package_review, update_package_review, GroupReview
-from helpers import calculate_next_review_date
+from helpers import calculate_next_review_date, ckanext_review_get_next_review_date
 ValidationError = ckan.logic.ValidationError
 
 #from ckan.lib.email_notifications import _notifications_functions
@@ -48,7 +48,7 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IAuthFunctions)
-    
+
     """
     IRoutes
     """
@@ -173,6 +173,8 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     IPackageController
     """       
     def after_show(self, context, pkg_dict):
+        #print '**********after_show***************'
+        #self._trace(context, pkg_dict)
         #set the default review date value
         if 'owner_org' in pkg_dict:
             package_review = get_package_review(context['session'], pkg_dict['id'])
@@ -195,7 +197,7 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
 #         for r in search_results['results']:
 #             r['next_review_date'] = str(datetime.date.today())
                     
-    def after_update(self, context, pkg_dict):
+    def _update_extra(self, context, pkg_dict):
         package_review = get_package_review(context['session'], pkg_dict['id'])
         if 'next_review_date' in tk.request.params:
             try:
@@ -210,12 +212,26 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
             else:
                 add_package_review(context['session'], pkg_dict['id'], next_review_date)
                 
+
+    def after_update(self, context, pkg_dict):
+        #print '**********after_update***************'
+        #self._trace(context, pkg_dict)
+        self._update_extra(context, pkg_dict)
+        return super(ReviewPlugin, self).after_update(context, pkg_dict)
+                
+    def after_create(self, context, pkg_dict):
+        #print '**********after_update***************'
+        #self._trace(context, pkg_dict)
+        self._update_extra(context, pkg_dict)
+        return super(ReviewPlugin, self).after_create(context, pkg_dict)
+
     """
     ITemplateHelpers
     """
     def get_helpers(self):
         return {
             'get_dataset_review_interval_types'             : h.get_dataset_review_interval_types,
+            'ckanext_review_get_next_review_date'           : h.ckanext_review_get_next_review_date,
                 }
         
         
@@ -225,7 +241,20 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     def get_auth_functions(self):
         return {'package_review': _package_review}
     
-    
+    def _trace(self, context, data_dict=None):
+        if context is not None:
+            print "----context----"
+            print [value for value in context.iteritems()]
+        if data_dict is not None:
+            print "----data_dict----"
+            print [value for value in data_dict.iteritems()]
+            pass
+        if plugins.toolkit.c is not None:
+            print "----plugins.toolkit.c----"
+            print plugins.toolkit.c
+            pass
+
+   
 @auth_sysadmins_check
 def _package_review(context, data_dict=None):
     can_update = tk.check_access('package_update', context, data_dict)

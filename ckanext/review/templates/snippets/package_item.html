@@ -16,7 +16,8 @@ Example:
 {% set truncate = truncate or 180 %}
 {% set truncate_title = truncate_title or 80 %}
 {% set title = package.title or package.name %}
-{% set notes = h.markdown_extract(package.notes if 'notes' in package else '', extract_length=truncate) %}
+{% set truncate_notes = truncate_notes or 80 %}
+{% set notes = h.markdown_wrap(package.notes, extract_length=truncate_notes) if h.markdown_wrap(package.notes, extract_length=truncate_notes)|length else h.markdown_extract(package.notes, extract_length=truncate_notes) %}
 
 <li class="{{ item_class or "dataset-item" }}">
   {% block package_item_content %}
@@ -28,6 +29,12 @@ Example:
             {{ _('Private') }}
           </span>
         {% endif %}
+      {% if 'suspended' in package.state %}
+        <span class="dataset-private label label-inverse" style="background:#ce5555">
+          <i class="icon-lock"></i>
+          {{ _('Suspended') }}
+        </span>
+      {% endif %}
         {{ h.link_to(h.truncate(title, truncate_title), h.url_for(controller='package', action='read', id=package.name)) }}
         {% if package.get('state', '').startswith('draft') %}
           <span class="label label-info">{{ _('Draft') }}</span>

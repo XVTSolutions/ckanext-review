@@ -3,6 +3,7 @@ import ckan
 import ckan.plugins.toolkit as tk
 from dateutil.relativedelta import relativedelta
 from model import GroupReview
+from ckan.model import Activity, ActivityDetail
 
 def get_dataset_review_interval_types():
     return ('day(s)', 'week(s)', 'month(s)', 'year(s)')
@@ -65,4 +66,24 @@ def _get_org_id(data):
         return org_id
     
     return None
+
+def create_review_activity(context, pkg_dict):
+
+    model = context['model']
+    user = context['user']
+    userobj = model.User.get(user)
+    detail_type_reviewed = 'reviewed'
+    object_type_package = 'package'
+    dataset_activity_type_reviewed = 'package reviewed'
+
+    activity_object_id = pkg_dict.get('id')
+
+    #create activity record
+    activity = Activity(user_id=userobj.id, object_id=activity_object_id, revision_id=pkg_dict.get('revision_id'), activity_type=dataset_activity_type_reviewed, data={object_type_package: pkg_dict,})
+    activity.save()
+
+    #create detail record
+    activity_detail = ActivityDetail(activity_id=activity.id, object_id=activity.object_id, object_type=object_type_package, activity_type=detail_type_reviewed, data={object_type_package: pkg_dict,})
+    activity_detail.save()
+
 

@@ -1,4 +1,4 @@
-from sqlalchemy import orm, Table, Column, ForeignKey, types
+from sqlalchemy import orm, Table, Column, ForeignKey, types, and_
 import ckan
 from ckan.model.meta import metadata
 from ckan.model.types import make_uuid
@@ -51,7 +51,12 @@ def create_table():
     
 def get_by_date(session, date):
     return session.query(PackageReview).filter(PackageReview.next_review_date == date)
-    
+
+def get_by_daterange(session, startdate, enddate):
+    return session.query(PackageReview).filter(
+        and_(PackageReview.next_review_date >= startdate, PackageReview.next_review_date <= enddate)
+    ).all()
+
 def get_package_review(session, package_id):
     return session.query(PackageReview).filter(PackageReview.package_id == package_id).first()
 

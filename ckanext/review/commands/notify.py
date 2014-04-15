@@ -1,6 +1,6 @@
 import sys
 from ckan.lib.cli import CkanCommand
-from ckanext.review.model import get_by_date
+from ckanext.review.model import get_by_daterange
 import ckan
 import pylons
 import ckan.plugins as plugins
@@ -36,9 +36,9 @@ class NotifyCommand(CkanCommand):
         
         admin_user = plugins.toolkit.get_action('get_site_user')(context,{})
 
-        #get all packages that need to be reviewed today
-        package_reviews = get_by_date(ckan.model.Session, datetime.date.today())
-        
+        #get all packages that need to be reviewed
+        package_reviews = get_by_daterange(ckan.model.Session, datetime.date(2001,1,1), datetime.date.today())
+
         for pr in package_reviews:
             #get the package
             pkg = ckan.model.Package.get(pr.package_id)

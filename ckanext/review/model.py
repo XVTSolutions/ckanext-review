@@ -3,6 +3,7 @@ import ckan
 from ckan.model.meta import metadata
 from ckan.model.types import make_uuid
 import ckan.plugins.toolkit as tk
+from validators import get_validator as vdoj_get_validator 
 
 group_review_table = Table('group_review', metadata,
         Column('group_id', types.UnicodeText, ForeignKey('group.id'), primary_key=True),
@@ -31,7 +32,7 @@ class GroupReview(ckan.model.domain_object.DomainObject):
 #         except ckan.lib.navl.dictization_functions.StopOnError:
 #             is_valid = False
            
-        validator = tk.get_validator('is_positive_integer') 
+        validator = vdoj_get_validator('in_range_db_positive_integer') 
         try:
             #validator('dataset_review_interval', data, errors, context)
             validator(data.get('dataset_review_interval', 0), context)

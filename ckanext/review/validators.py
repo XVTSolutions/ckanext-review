@@ -39,7 +39,7 @@ def get_validator(validator):
     except KeyError:
         raise UnknownValidator('Validator `%s` does not exist' % validator)
 
-def in_range_db_positive_integer(value, context):
+def in_range_date_positive_integer(value, context):
     value = is_positive_integer(value, context)
     if value < 1 or value > 999:
         raise Invalid(_('Must be in range from 1 to 999'))

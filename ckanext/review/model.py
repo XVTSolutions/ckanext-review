@@ -32,7 +32,7 @@ class GroupReview(ckan.model.domain_object.DomainObject):
 #         except ckan.lib.navl.dictization_functions.StopOnError:
 #             is_valid = False
            
-        validator = vdoj_get_validator('in_range_db_positive_integer') 
+        validator = vdoj_get_validator('in_range_date_positive_integer') 
         try:
             #validator('dataset_review_interval', data, errors, context)
             validator(data.get('dataset_review_interval', 0), context)

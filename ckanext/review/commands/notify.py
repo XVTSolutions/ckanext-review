@@ -7,6 +7,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
 import ckan.logic.converters as converters
 import datetime
+import ckanext.review.helpers as h
 from ckan.logic.validators import object_id_validators
 
 class NotifyCommand(CkanCommand):
@@ -39,24 +40,17 @@ class NotifyCommand(CkanCommand):
         #get all packages that need to be reviewed
         package_reviews = get_by_daterange(ckan.model.Session, datetime.date(2001,1,1), datetime.date.today())
 
+        review_context = {
+            'model': ckan.model,
+            'user':admin_user["name"],
+            'session': ckan.model.Session,
+            'ignore_auth': True
+        }
         for pr in package_reviews:
             #get the package
             pkg = ckan.model.Package.get(pr.package_id)
             pkg_dict = ckan.lib.dictization.table_dictize(pkg, context)
             
-            user_id = pkg_dict["creator_user_id"]
-            
-            if pkg.maintainer and len(pkg.maintainer) > 0:
-                user_id = converters.convert_user_name_or_id_to_id(pkg.maintainer, context)
-            
-            #add item into the creators activity stream indicating the package needs to be reviewed
-            activity_dict = {
-                'user_id': admin_user['name'],
-                'object_id': user_id,
-                'data' : { 'dataset': pkg_dict },
-                'activity_type': 'review package',
-            }
-            plugins.toolkit.get_action('activity_create')(context, activity_dict)
-            
+            h.create_review_activity(review_context, pkg_dict)
         print 'done'
         

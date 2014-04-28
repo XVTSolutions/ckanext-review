@@ -4,6 +4,11 @@ import ckan.plugins.toolkit as tk
 from dateutil.relativedelta import relativedelta
 from model import GroupReview
 from ckan.model import Activity, ActivityDetail
+#from ckan.lib.email_notifications import _notifications_functions
+from ckan.lib.activity_streams import activity_stream_string_functions, activity_stream_string_icons
+
+dataset_activity_type_package_reviewed = 'package reviewed'
+dataset_activity_type_review_package = 'review package'
 
 def get_dataset_review_interval_types():
     return ('day(s)', 'week(s)', 'month(s)', 'year(s)')
@@ -67,23 +72,33 @@ def _get_org_id(data):
     
     return None
 
-def create_review_activity(context, pkg_dict):
+def create_review_activity(context, pkg_dict, dataset_activity_type):
 
     model = context['model']
     user = context['user']
     userobj = model.User.get(user)
     detail_type_reviewed = 'reviewed'
     object_type_package = 'package'
-    dataset_activity_type_reviewed = 'package reviewed'
 
     activity_object_id = pkg_dict.get('id')
 
     #create activity record
-    activity = Activity(user_id=userobj.id, object_id=activity_object_id, revision_id=pkg_dict.get('revision_id'), activity_type=dataset_activity_type_reviewed, data={object_type_package: pkg_dict,})
+    activity = Activity(user_id=userobj.id, object_id=activity_object_id, revision_id=pkg_dict.get('revision_id'), activity_type=dataset_activity_type, data={object_type_package: pkg_dict,})
     activity.save()
 
     #create detail record
     activity_detail = ActivityDetail(activity_id=activity.id, object_id=activity.object_id, object_type=object_type_package, activity_type=detail_type_reviewed, data={object_type_package: pkg_dict,})
     activity_detail.save()
 
+def register_activity_types():
+    #_notifications_functions.append(notifications)
+    activity_stream_string_functions[dataset_activity_type_package_reviewed] = activity_stream_string_package_reviewed
+    activity_stream_string_functions[dataset_activity_type_review_package] = activity_stream_string_review_package
+    activity_stream_string_icons[dataset_activity_type_review_package] = 'calendar'
+
+def activity_stream_string_review_package(context, activity):
+    return tk._("{dataset} is due for review")
+
+def activity_stream_string_package_reviewed(context, activity):
+    return tk._("{dataset} has been reviewed")
 

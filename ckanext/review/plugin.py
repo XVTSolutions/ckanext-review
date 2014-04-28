@@ -11,8 +11,6 @@ from model import create_table, get_package_review, add_package_review, update_p
 from helpers import calculate_next_review_date, ckanext_review_get_next_review_date
 ValidationError = ckan.logic.ValidationError
 
-#from ckan.lib.email_notifications import _notifications_functions
-from ckan.lib.activity_streams import activity_stream_string_functions, activity_stream_string_icons
 
 
 # def notifications(user_dict, since):
@@ -23,11 +21,6 @@ from ckan.lib.activity_streams import activity_stream_string_functions, activity
 # 
 #     return notifications
 
-def activity_stream_string_review_package(context, activity):
-    return plugins.toolkit._("{dataset} is due for review")
-
-def activity_stream_string_package_reviewed(context, activity):
-    return plugins.toolkit._("{dataset} has been reviewed")
 
 class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     """
@@ -36,11 +29,8 @@ class ReviewPlugin(plugins.SingletonPlugin, libplugins.DefaultOrganizationForm):
     print "loading ckanext-review"
 
     create_table()
-    #_notifications_functions.append(notifications)
-    activity_stream_string_functions['package reviewed'] = activity_stream_string_package_reviewed
-    activity_stream_string_functions['review package'] = activity_stream_string_review_package
-    activity_stream_string_icons['review package'] = 'calendar'
-    
+    h.register_activity_types()
+
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IConfigurer, inherit=True)
     #plugins.implements(plugins.IGroupForm, inherit=True)

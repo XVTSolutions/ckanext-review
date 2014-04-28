@@ -16,7 +16,7 @@ from ckan.logic.validators import package_name_exists
 from ckan.logic.converters import convert_package_name_or_id_to_id as convert_to_id
 from ckan.logic.validators import object_id_validators
 
-from helpers import calculate_next_review_date, create_review_activity
+from helpers import calculate_next_review_date, create_review_activity, dataset_activity_type_package_reviewed
 from model import create_table, get_package_review, add_package_review, update_package_review
 
 class ReviewController(BaseController):
@@ -63,7 +63,7 @@ class ReviewController(BaseController):
             context['session'].commit()
 
             #create activity
-            create_review_activity(context, pkg_dict)
+            create_review_activity(context, pkg_dict, dataset_activity_type_package_reviewed)
 
             '''
             context = {'model': ckan.model,

@@ -25,8 +25,9 @@ class NotifyCommand(CkanCommand):
 
     def command(self):
         self._load_config()
-        
-        object_id_validators['review package'] = tk.get_validator('user_id_exists')#tk.get_validator('package_id_exists')
+        h.register_activity_types()
+
+        object_id_validators[h.dataset_activity_type_review_package] = tk.get_validator('user_id_exists')#tk.get_validator('package_id_exists')
 #         if len(self.args) == 0:
 #             self.parser.print_usage()
 #             sys.exit(1)
@@ -51,6 +52,6 @@ class NotifyCommand(CkanCommand):
             pkg = ckan.model.Package.get(pr.package_id)
             pkg_dict = ckan.lib.dictization.table_dictize(pkg, context)
             
-            h.create_review_activity(review_context, pkg_dict)
+            h.create_review_activity(review_context, pkg_dict, h.dataset_activity_type_review_package)
         print 'done'
         

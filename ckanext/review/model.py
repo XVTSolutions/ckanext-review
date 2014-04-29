@@ -69,7 +69,7 @@ def add_package_review(session, package_id, next_review_date):
     
     session.add(model)
     
-    session.flush()
+    session.commit()
     
 def update_package_review(session, package_review):
     session.query(PackageReview).filter(PackageReview.package_id == package_review.package_id).update({"next_review_date": package_review.next_review_date})

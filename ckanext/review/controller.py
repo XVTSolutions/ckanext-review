@@ -63,7 +63,8 @@ class ReviewController(BaseController):
             context['session'].commit()
 
             #create activity
-            create_review_activity(context, pkg_dict, dataset_activity_type_package_reviewed)
+            activity_object_id = pkg_dict.get('id')
+            create_review_activity(context, pkg_dict, dataset_activity_type_package_reviewed, activity_object_id)
 
             '''
             context = {'model': ckan.model,

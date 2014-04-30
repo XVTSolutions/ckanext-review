@@ -72,15 +72,13 @@ def _get_org_id(data):
     
     return None
 
-def create_review_activity(context, pkg_dict, dataset_activity_type):
+def create_review_activity(context, pkg_dict, dataset_activity_type, activity_object_id):
 
     model = context['model']
     user = context['user']
     userobj = model.User.get(user)
     detail_type_reviewed = 'reviewed'
     object_type_package = 'package'
-
-    activity_object_id = pkg_dict.get('id')
 
     #create activity record
     activity = Activity(user_id=userobj.id, object_id=activity_object_id, revision_id=pkg_dict.get('revision_id'), activity_type=dataset_activity_type, data={object_type_package: pkg_dict,})

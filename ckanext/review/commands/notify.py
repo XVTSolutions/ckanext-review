@@ -58,12 +58,12 @@ class NotifyCommand(CkanCommand):
 
                 review_context = {
                     'model': ckan.model,
-                    'user':user.name,
+                    'user':admin_user.get('name'),
                     'session': ckan.model.Session,
                     'ignore_auth': True
                 }
-
-                h.create_review_activity(review_context, pkg_dict, h.dataset_activity_type_review_package)
+                activity_object_id = user.id
+                h.create_review_activity(review_context, pkg_dict, h.dataset_activity_type_review_package, activity_object_id)
             except NotFound:
 #                raise ValueError('User not found')
                 print 'User not found %s '%(recipient)

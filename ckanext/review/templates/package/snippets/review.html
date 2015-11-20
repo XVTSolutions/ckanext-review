@@ -1,3 +1,4 @@
+{% block vdoj_review_button %}
 {% if h.check_access('package_review', {'id': pkg.id}) and pkg.needs_review %}
 <form action="/dataset/review/{{ pkg.name }}" method="POST" >
 	<section class="module module-narrow">
@@ -8,3 +9,4 @@
 	</section>
 </form>
 {% endif %}
+{% endblock %}

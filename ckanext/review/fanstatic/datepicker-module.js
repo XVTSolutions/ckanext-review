@@ -3,8 +3,10 @@ $(function() {
 	$.each($(".vdoj-datepicker input:text"), function(){
 	    $(this).datepicker({ dateFormat: "dd-mm-yy" });
 	    if ($(this).attr('readonly')=='readonly'){
-			$(this).datepicker("option", "minDate", -1);
-			$(this).datepicker("option", "maxDate", -2);
+			if (!$.trim($(this).val()).length){
+				$(this).datepicker("setDate", new Date());//fail safe
+			}
+			$(this).datepicker("option", "beforeShow", function(element, instance) { return false; });
 	    }
 	});
 });

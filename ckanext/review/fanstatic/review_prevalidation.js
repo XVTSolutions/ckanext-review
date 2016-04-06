@@ -1,5 +1,7 @@
 this.ckan.module('review_prevalidation', function (jQuery, _) {
-
+  var isNumeric = function (n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+  };
 
   return {
 
@@ -35,7 +37,7 @@ this.ckan.module('review_prevalidation', function (jQuery, _) {
         $(this).val(fieldValue);
 
         //is integer?
-        if(!isInteger(fieldValue) || parseInt(fieldValue) < 1 || parseInt(fieldValue) > 999) {
+        if(!isNumeric(fieldValue) || parseInt(fieldValue) < 1 || parseInt(fieldValue) > 999) {
           var error = 'Must be in range from 1 to 999';
           valiationErrors.push({'label': label, 'error': error});
           $(this).parent().append('<span class="error-block">' + error + '</span>');

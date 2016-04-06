@@ -8,7 +8,7 @@
 	{#{{ form.input('dataset_review_interval', label=_('Dataset Review Interval'), id='field-dataset_review_interval', placeholder=_('e.g. 3m'), value=data.dataset_review_interval, error=errors.dataset_review_interval, classes=['control-full']) }}#}
 
 	<div class="control-group">
-    	<label class="control-label" for="field-related_dataset_info"><span class="control-required" title={{ _('Required') }}> *</span> {{ _("Dataset Review Interval") }}</label>
+    	<label class="control-label" for="field-related_dataset_info"><span class="control-required" title={{ _('Required') }}>*</span> {{ _("Dataset Review Interval") }}</label>
 
 		<div class="controls">
 			<input type="number" id="field-dataset_review_interval" name="dataset_review_interval" value="{{ c.dataset_review_interval }}" style="width: 25px" />
